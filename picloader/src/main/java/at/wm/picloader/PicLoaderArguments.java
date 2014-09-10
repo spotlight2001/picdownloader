@@ -1,5 +1,6 @@
 package at.wm.picloader;
 
+
 public class PicLoaderArguments {
 	private String startUrl;
 

@@ -1,7 +1,7 @@
 package at.wm.picloader;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -10,7 +10,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Collection;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
@@ -27,8 +29,10 @@ public class ImageStorageServiceImpl implements
 	private static final Logger LOGGER = LoggerFactory
 			.getLogger(ImageStorageServiceImpl.class);
 
-	public Integer getHighestFolderNumber(String... folders) {
+	// we assume singleton here
+	private File folder;
 
+	public Integer getHighestFolderNumber(String... folders) {
 		final FolderNumberContainer folderNumberContainer = new FolderNumberContainer();
 
 		for (String folder : folders) {
@@ -67,8 +71,7 @@ public class ImageStorageServiceImpl implements
 		return NumberUtils.createInteger(numberStr);
 	}
 
-	public File store(String filename, String type, byte[] data) {
-		Assert.isTrue(data.length > 0);
+	public File getFolder(String type) {
 		int highestFolderNumber = getHighestFolderNumber("f:/tmp/in/other/pik/");
 		if (highestFolderNumber <= 0) {
 			throw new IllegalArgumentException("highest folder number: "
@@ -77,19 +80,57 @@ public class ImageStorageServiceImpl implements
 		File baseFolder = new File("f:/tmp/in/other/pik/new/");
 		Assert.isTrue(baseFolder.exists() && baseFolder.isDirectory()
 				&& baseFolder.canWrite());
-		File folder = new File(baseFolder, type + "-" + highestFolderNumber);
-		if (!folder.exists()) {
-			Assert.isTrue(folder.mkdir());
+
+		// pick first empty or non-existent folder
+		while (true) {
+			File folder = new File(baseFolder, type + "-" + highestFolderNumber);
+			if (!folder.exists()) {
+				Assert.isTrue(folder.mkdir());
+			}
+			Collection<File> listFiles = FileUtils.listFiles(folder, null,
+					false);
+			boolean isFolderEmpty = listFiles.size() <= 0;
+			if (isFolderEmpty) {
+				return folder;
+			} else {
+				highestFolderNumber++;
+			}
 		}
+	}
+
+	public File store(String filename, String type, byte[] data) {
+		Assert.isTrue(data.length > 0);
+
+		if (folder == null) {
+			this.folder = getFolder(type);
+		}
+
 		File file = new File(folder, filename);
+
+		// if file already exist - only overwrite with larger version
+		// e.g.: thumbnail vs. real img
+		if (file.exists()) {
+			try {
+				byte[] dataOfExistingFile = IOUtils
+						.toByteArray(new FileInputStream(file));
+				if (data.length <= dataOfExistingFile.length) {
+					LOGGER.info("dont save file from url, because existing file with same name is equal or larger");
+				}
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		FileOutputStream fis = null;
 		try {
+			fis = new FileOutputStream(file);
 			IOUtils.write(data, new FileOutputStream(file));
-		} catch (FileNotFoundException e) {
-			throw new RuntimeException(e);
+			fis.close();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		LOGGER.debug("stored file to: " + file.getAbsolutePath());
+		Assert.isTrue(file.exists() && file.isFile());
+		LOGGER.info("stored file to: " + file.getAbsolutePath());
 		return file;
 	}
 
