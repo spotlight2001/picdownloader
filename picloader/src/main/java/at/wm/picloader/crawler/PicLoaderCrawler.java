@@ -1,12 +1,12 @@
 package at.wm.picloader.crawler;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import at.wm.picloader.ImageDownloadEvent;
 import at.wm.picloader.PicLoaderArguments;
-import at.wm.picloader.PicLoaderMain;
 import edu.uci.ics.crawler4j.crawler.Page;
 import edu.uci.ics.crawler4j.crawler.WebCrawler;
 import edu.uci.ics.crawler4j.parser.BinaryParseData;
@@ -15,7 +15,7 @@ import edu.uci.ics.crawler4j.url.WebURL;
 public class PicLoaderCrawler extends WebCrawler {
 
 	private static final Logger LOGGER = LoggerFactory
-			.getLogger(PicLoaderMain.class);
+			.getLogger(PicLoaderCrawler.class);
 
 	private static PicLoaderArguments cfg;
 
@@ -36,8 +36,9 @@ public class PicLoaderCrawler extends WebCrawler {
 
 	private boolean isAllowedSingleImagePage(String url) {
 		url = url.toLowerCase();
+		url = StringUtils.split(url, "?")[0];
 		boolean result = url.contains(cfg.getSingleImagePagePattern())
-				&& endsWith(url, new String[] { "html", "htm" });
+				&& endsWith(url, new String[] { "html", "htm", "/", "php" });
 		return result;
 	}
 

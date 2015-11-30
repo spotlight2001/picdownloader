@@ -115,6 +115,7 @@ public class ImageStorageServiceImpl implements
 						.toByteArray(new FileInputStream(file));
 				if (data.length <= dataOfExistingFile.length) {
 					LOGGER.info("dont save file from url, because existing file with same name is equal or larger");
+					return file;
 				}
 			} catch (IOException e) {
 				throw new RuntimeException(e);
