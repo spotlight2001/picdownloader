@@ -54,9 +54,9 @@ public class PicLoaderCrawler extends WebCrawler {
 	private boolean isSmallSizeImage(int numberOfBytes) {
 		return (numberOfBytes / 1024) < 30;
 	}
-
+	
 	@Override
-	public boolean shouldVisit(WebURL url) {
+	public boolean shouldVisit(Page referringPage, WebURL url) {
 		String href = url.getURL().toLowerCase();
 		boolean allow = isAllowedImage(href) || isAllowedSingleImagePage(href);
 		LOGGER.debug("follow url '{}'?: '{}'", href, allow);

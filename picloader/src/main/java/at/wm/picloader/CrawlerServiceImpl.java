@@ -29,7 +29,7 @@ public class CrawlerServiceImpl {
 		config.setConnectionTimeout(20000);
 		config.setSocketTimeout(20000);
 		config.setIncludeBinaryContentInCrawling(true);
-		config.setUserAgentString("Mozilla/5.0 (Windows NT 6.3; WOW64; rv:34.0) Gecko/20100101 Firefox/34.0");
+		config.setUserAgentString("Mozilla/5.0 (Windows NT 10.0; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0");
 		config.setMaxDownloadSize(config.getMaxDownloadSize() * 10);
 
 		/*
